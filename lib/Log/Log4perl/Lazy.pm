@@ -1,19 +1,30 @@
 use 5.008;
 use strict;
-no strict 'refs';
 use warnings FATAL => 'all';
 
 package Log::Log4perl::Lazy;
+no strict 'refs';
+no warnings 'redefine';
 
+use Carp qw(croak);
 use Params::Lazy;
 require Log::Log4perl;
+
+my @available_levels = qw(TRACE DEBUG INFO WARN ERROR FATAL);
+my %is_available_level = map {$_ => 1} @available_levels;
 
 sub import {
     my ($self_pkg, @levels) = @_;
     my $caller_pkg = caller;
 
     if (@levels == 0) {
-        @levels = qw(TRACE DEBUG INFO WARN ERROR FATAL);
+        @levels = @available_levels;
+    } else {
+        for my $level (@levels) {
+            unless ($is_available_level{$level}) {
+                croak qq("$level" is not exported by the $self_pkg module);
+            }
+        }
     }
 
     my $logger = Log::Log4perl->get_logger($caller_pkg);
@@ -45,11 +56,11 @@ Log::Log4perl::Lazy - Lazily evaluate logging arguments
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
@@ -122,7 +133,11 @@ You can also look for information at:
 
 =over 4
 
-=item * RT: CPAN's request tracker (report bugs here)
+=item * GitHub repository (report bugs here)
+
+L<https://github.com/mahiro/perl-Log-Log4perl-Lazy>
+
+=item * RT: CPAN's request tracker (report bugs here, alternatively)
 
 L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Log-Log4perl-Lazy>
 
